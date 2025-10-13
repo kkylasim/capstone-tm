@@ -1,0 +1,35 @@
+.container {
+    max-width: 600px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-control {
+    width: 100%;
+}
+
+.box-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.list-box {
+    width: 45%;
+}
+
+.align-right {
+    display: block;
+    margin-left: auto;
+}
+
+mat-selection-list {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 4px;
+}

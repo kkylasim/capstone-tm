@@ -1,0 +1,53 @@
+<div class="container">
+    <h2>Data Generation</h2>
+
+    <!-- Dropdown -->
+    <mat-form-field appearance="outline" class="form-control">
+        <mat-label>Tenant</mat-label>
+        <mat-select [(value)]="selectedTenant">
+            <mat-option *ngFor="let tenant of tenants" [value]="tenant">
+                {{ tenant }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <!-- Date Picker -->
+    <mat-form-field appearance="outline" class="form-control">
+        <mat-label>Transaction Date</mat-label>
+        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <!-- Dual List Boxes -->
+    <div class="box-container">
+        <div class="list-box">
+            <h3>Rules</h3>
+            <mat-selection-list #availableList>
+                <mat-list-option *ngFor="let item of availableOptions" [value]="item">
+                    {{ item }}
+                </mat-list-option>
+            </mat-selection-list>
+            <button mat-raised-button color="primary" (click)="moveSelected(availableList.selectedOptions.selected)">
+                Select rules →
+            </button>
+        </div>
+
+        <div class="list-box">
+            <h3>Applied Rules</h3>
+            <mat-selection-list #selectedList>
+                <mat-list-option *ngFor="let item of selectedOptions" [value]="item">
+                    {{ item }}
+                </mat-list-option>
+            </mat-selection-list>
+            <button mat-raised-button color="warn" (click)="removeSelected(selectedList.selectedOptions.selected)"
+                class="align-right">
+                ← Remove rules
+            </button>
+        </div>
+    </div>
+
+    <button mat-raised-button color="primary" (click)="generateData">
+        Generate transactions
+    </button>
+</div>

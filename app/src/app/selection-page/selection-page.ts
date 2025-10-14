@@ -9,6 +9,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-selection-page',
@@ -29,7 +30,8 @@ import { MatIcon, MatIconModule } from '@angular/material/icon';
   templateUrl: './selection-page.html',
   styleUrls: ['./selection-page.scss']
 })
-export class SelectionPageComponent {
+export class SelectionPage {
+  constructor(private router: Router) {}
   tenants = [1, 2, 3];
   selectedTenant: number | null = null;
   selectedDate: Date | null = null;
@@ -52,6 +54,7 @@ export class SelectionPageComponent {
   }
 
   generateData() {
-    console.log("Generating data...")
+    this.router.navigate(['/end']);
+    console.log("Generating data...");
   }
 }

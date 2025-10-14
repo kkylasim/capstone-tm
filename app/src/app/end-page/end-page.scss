@@ -1,0 +1,47 @@
+.content {
+    display: flex;
+    flex-direction: column; 
+}
+
+.result-container {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-height: 500px;
+  }
+  
+  .result-scroll {
+    max-height: 450px;
+    overflow-y: auto;
+    margin-bottom: 60px;
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin: 10px auto;
+  }
+  
+  .download-btn, .cancel-btn {
+    margin: 10px;
+    right: 24px;
+    bottom: 24px;
+    padding: 12px 32px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+  }
+
+  .cancel-btn {
+    background: #e0e0e0;
+    color: #000;
+  }

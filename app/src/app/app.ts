@@ -1,14 +1,12 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SelectField } from './components/select-field/select-field';
 import { Tenant } from './models/tenant.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { Datepicker } from './components/datepicker/datepicker';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SelectField, MatFormFieldModule, MatSelectModule, Datepicker],
+  imports: [RouterOutlet, MatFormFieldModule, MatSelectModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

@@ -1,6 +1,10 @@
 <div class="container">
     <h2>Data Generation</h2>
 
+    <div class="warning" *ngIf="warningMessage" style="color: red;">
+        {{ warningMessage }}
+    </div>
+
     <!-- Dropdown -->
     <mat-form-field appearance="outline" class="form-control">
         <mat-label>Tenant</mat-label>

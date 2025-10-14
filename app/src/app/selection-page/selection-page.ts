@@ -31,13 +31,15 @@ import { Router } from '@angular/router';
   styleUrls: ['./selection-page.scss']
 })
 export class SelectionPage {
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
   tenants = [1, 2, 3];
   selectedTenant: number | null = null;
   selectedDate: Date | null = null;
 
   availableOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
   selectedOptions: string[] = [];
+
+  warningMessage: string = '';
 
   moveSelected(selectedItems: any[]) {
     const values = selectedItems.map((x: any) => x.value);
@@ -54,7 +56,12 @@ export class SelectionPage {
   }
 
   generateData() {
+    if (this.selectedTenant == null || this.selectedDate == null || this.selectedOptions.length == 0) {
+      this.warningMessage = '⚠️ Please select a tenant, a date, and at least one option before proceeding.';
+      return;
+    }
+
+    this.warningMessage = ''
     this.router.navigate(['/end']);
-    console.log("Generating data...");
   }
 }

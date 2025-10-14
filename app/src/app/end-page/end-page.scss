@@ -16,23 +16,22 @@
 }
 
 .result-scroll {
-  max-height: 450px;
+  max-height: calc(100vh - 300px);
   overflow-y: auto;
-  margin-bottom: 60px;
+  margin-bottom: 40px;
 }
 
 .button-container {
   display: flex;
-  justify-content: flex-end;
-  margin: 10px auto;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .button {
-  margin-left: 10px;
-  margin-right: 10px;
+  flex: 0 0 120px;
 }
 
 table {
-  width: 60%;
+  width: 80%;
   margin-top: 20px;
 }

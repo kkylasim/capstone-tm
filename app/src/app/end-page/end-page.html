@@ -1,25 +1,29 @@
 <div class="content">
   <div class="result-container">
     <h1>Data Generated Result</h1>
-    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
-      <!-- Dynamic Columns -->
-      <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
-        <th mat-header-cell *matHeaderCellDef>{{ column | titlecase }}</th>
-        <td mat-cell *matCellDef="let element">{{ element[column] }}</td>
-      </ng-container>
+    <div class="result-scroll">
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
-      <!-- Header and Row definitions -->
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-  </div>
-  <div class="button-container">
-    <button mat-raised-button color="primary" (click)="onCancel()" class="button">
-      Cancel
-    </button>
-    <button mat-raised-button color="primary" (click)="onDownload()" class="button">
-      Download
-    </button>
+        <!-- Dynamic Columns -->
+        <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
+          <th mat-header-cell *matHeaderCellDef>{{ column | titlecase }}</th>
+          <td mat-cell *matCellDef="let element">{{ element[column] }}</td>
+        </ng-container>
+
+        <!-- Header and Row definitions -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <div class="button-container">
+      <button mat-raised-button color="primary" (click)="onCancel()" class="button">
+        Cancel
+      </button>
+      <button mat-raised-button color="primary" (click)="onDownload()" class="button">
+        Download
+      </button>
+    </div>
   </div>
 </div>

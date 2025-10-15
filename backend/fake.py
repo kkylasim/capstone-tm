@@ -144,6 +144,13 @@ class TransactionInput(BaseModel):
     
 
 class Data:
+    template = '''
+    {From}{TransactionDate}{TransactionID}~##~{From}~##~{From}1021523002118{Currency}~##~{Amount}~##~~##~{Scenario}
+    {RuleID}{TransactionDate}~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~TCOECDEGEN~##~~##~~##~CNMNTXN99~##~~##~{TransactionDate}124925~##~UOB~##~~##~~##~~##~~##~~
+    ##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~6000~##~CNY~##~~##~~##~~##~~##~~##~~1~##~~##~~##~~##~~##~~##~RBK~##~~##~110~##~~
+    #~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~{FromTo}~##~~##~~##~~##~~##~~##~4832~##~~##~~##~~##~~##~C~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~
+    '''
+
     def generate_transaction(input_data: TransactionInput):
         """Generate a fake transaction based on the provided input data."""
         # -------------------------- #
@@ -194,6 +201,8 @@ class Data:
                     "SourceSystem": source_system,
                     "FromTo": f"{from_country}-{to_country}",
 
+                    "From": from_country,
+                    "To": to_country,
                     "Scenario": scenario,
                     "RuleType": rule_type,
                     "Direction": direction,
@@ -259,6 +268,8 @@ class Data:
             "SourceSystem": source_system,
             "FromTo": f"{from_country}-{to_country}",
 
+            "From": from_country,
+            "To": to_country,
             "Scenario": scenario,
             "RuleType": rule_type,
             "Direction": direction,
@@ -266,7 +277,7 @@ class Data:
             "AppliedRule": rule
         }
 
-    def generate_dataset(inputs: list[TransactionInput]) -> pd.DataFrame:
+    def generate_dataset(inputs: list[TransactionInput], write_path: str = None) -> pd.DataFrame:
         """Generate a dataset of fake transactions for all rule inputs."""
         n_per_rule = random.randint(3, 5)
         all_txns = []
@@ -276,10 +287,19 @@ class Data:
             else:
                 for _ in range(n_per_rule):
                     all_txns.append(Data.generate_transaction(inp))
-        return pd.DataFrame(all_txns)
+        res = pd.DataFrame(all_txns)
+        if write_path:
+            Data.write_dataset(res, write_path)
+        return res
+    
+    def write_dataset(df: pd.DataFrame, filename: str):
+        """Write the dataset to a text file in the specified format."""
+        with open(filename, 'w') as output:
+            outstr = "\n".join(df.apply(lambda row: Data.template.format(**row), axis=1))
+            output.write(outstr)
 
 if __name__ == "__main__":
     # For quick testing
     sample_inputs = TransactionInput.sample_data()
-    df = Data.generate_dataset(sample_inputs)
+    df = Data.generate_dataset(sample_inputs, write_path="sample_output.txt")
     print(df.head(20))

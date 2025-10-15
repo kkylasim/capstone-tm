@@ -33,8 +33,10 @@ import { Router } from '@angular/router';
 export class SelectionPage {
   constructor(private router: Router) { }
   tenants = [1, 2, 3];
+  scenarios = ['Positive', 'Negative', 'Boundary'];
   selectedTenant: number | null = null;
   selectedDate: Date | null = null;
+  selectedScenario: string | null = null;
 
   availableOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
   selectedOptions: string[] = [];
@@ -56,8 +58,8 @@ export class SelectionPage {
   }
 
   generateData() {
-    if (this.selectedTenant == null || this.selectedDate == null || this.selectedOptions.length == 0) {
-      this.warningMessage = '⚠️ Please select a tenant, a date, and at least one option before proceeding.';
+    if (this.selectedTenant == null || this.selectedDate == null || this.selectedOptions.length == 0 || this.selectedScenario == null) {
+      this.warningMessage = '⚠️ Please select a tenant, a date, a scenario and at least one option before proceeding.';
       return;
     }
 

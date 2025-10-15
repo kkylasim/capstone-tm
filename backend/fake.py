@@ -75,6 +75,14 @@ class TransactionInput(BaseModel):
     frequency: optional only required for frequency rules, queried from db by rule_id
     direction: optional only required for amount/frequency rules, queried from db by rule_id
     threshold: optional only required for amount/frequency rules, queried from db by rule_id
+
+    db will have
+    tenant
+    rule_id
+    rule_type
+    frequency
+    direction
+    threshold
     '''
     tenant: str = Field(..., description="Tenant or country code (e.g., 'CN')")
     transaction_date: datetime = Field(..., description="Base transaction date (YYYYMMDD or datetime)")
@@ -82,6 +90,7 @@ class TransactionInput(BaseModel):
     rule_id: str = Field(..., description="Rule ID (e.g., 'AML-FTF-ALL-ALL-A-D07-FTR')")
     rule: str = Field(..., description="Human-readable rule description")
     rule_type: RuleType
+    prohibited_country: str | None = Field(None, description="Prohibited country for country rules")
     frequency: int | None = Field(None, description="Frequency for frequency rules")
     direction: Direction | None = Field(None, description="Direction for amount/frequency rules")
     threshold: float | None = Field(None, description="Threshold for amount/frequency rules")
@@ -125,7 +134,8 @@ class TransactionInput(BaseModel):
               scenario=Scenario.borderline,
               rule_id='2',
               rule_type=RuleType.country,
-              rule="Transaction made to Iran"
+              rule="Transaction made to Iran",
+              prohibited_country="IR"
           ),
           # Frequency rule
           TransactionInput(
@@ -146,7 +156,7 @@ class TransactionInput(BaseModel):
 class Data:
     template = '''
     {From}{TransactionDate}{TransactionID}~##~{From}~##~{From}1021523002118{Currency}~##~{Amount}~##~~##~{Scenario}
-    {RuleID}{TransactionDate}~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~TCOECDEGEN~##~~##~~##~CNMNTXN99~##~~##~{TransactionDate}124925~##~UOB~##~~##~~##~~##~~##~~
+    {RuleID}{TransactionDate}~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~TCOECDEGEN~##~~##~~##~CNMNTXN99~##~~##~{TransactionDate}~##~UOB~##~~##~~##~~##~~##~~
     ##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~6000~##~CNY~##~~##~~##~~##~~##~~##~~1~##~~##~~##~~##~~##~~##~RBK~##~~##~110~##~~
     #~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~{FromTo}~##~~##~~##~~##~~##~~##~4832~##~~##~~##~~##~~##~C~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~
     '''
@@ -165,6 +175,7 @@ class Data:
         direction = input_data.direction.value if input_data.direction else None
         frequency = input_data.frequency
         threshold = input_data.threshold
+        prohibited_country = input_data.prohibited_country
 
 
         # -------------------------- #
@@ -200,15 +211,16 @@ class Data:
                     "Currency": currency,
                     "SourceSystem": source_system,
                     "FromTo": f"{from_country}-{to_country}",
-
                     "From": from_country,
-                    "To": to_country,
-                    "Scenario": scenario,
-                    "RuleType": rule_type,
-                    "Direction": direction,
-                    "Threshold": threshold,
-                    "Frequency": num_txns,
-                    "AppliedRule": rule
+                    "Scenario": scenario
+
+                    ### TO DELETE ###
+                    # "To": to_country,
+                    # "RuleType": rule_type,
+                    # "Direction": direction,
+                    # "Threshold": threshold,
+                    # "Frequency": num_txns,
+                    # "AppliedRule": rule
                 })
 
             return transactions  # multiple rows
@@ -221,13 +233,12 @@ class Data:
         currency = random.choice(["CNY", "USD", "EUR", "SGD"])
         source_system = random.choice(["RBK", "ATM", "MOB", "IBK"])
         from_country = tenant
-        to_country = random.choice(["CN", "IR", "US", "SG", "DE"])
-
-
+        
         # ---------- #
         # Rule Logic #
         # ---------- #
         if rule_type == "transaction amount":
+            to_country = random.choice(["CN", "IR", "US", "SG", "DE"])
             if threshold is None:
                 threshold = 100000
             if direction == "greater than":
@@ -247,7 +258,7 @@ class Data:
 
         elif rule_type == "country":
             if scenario == "positive":
-                to_country = "IR"  # prohibited
+                to_country = prohibited_country  # prohibited
             elif scenario == "borderline":
                 to_country = random.choice(["TR", "PK"])  # adjacent
             else:
@@ -267,14 +278,15 @@ class Data:
             "Currency": currency,
             "SourceSystem": source_system,
             "FromTo": f"{from_country}-{to_country}",
-
             "From": from_country,
-            "To": to_country,
-            "Scenario": scenario,
-            "RuleType": rule_type,
-            "Direction": direction,
-            "Threshold": threshold,
-            "AppliedRule": rule
+            "Scenario": scenario
+
+            ### TO DELETE ###
+            # "To": to_country,
+            # "RuleType": rule_type,
+            # "Direction": direction,
+            # "Threshold": threshold,
+            # "AppliedRule": rule
         }
 
     def generate_dataset(inputs: list[TransactionInput], write_path: str = None) -> pd.DataFrame:

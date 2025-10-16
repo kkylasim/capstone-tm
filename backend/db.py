@@ -126,9 +126,10 @@ def get_rules_for_tenant(tenant_id):
 
     tenant_rules = TenantRule.query.filter_by(tenant_id=tenant_id).all()
     rules = []
+
     for tr in tenant_rules:
         rule = Rule.query.get(tr.rule_id)
-        rules.append({
+        rule_data = {
             "rule_id": rule.rule_id,
             "rule_name": rule.rule_name,
             "rule_description": rule.rule_description,
@@ -138,9 +139,14 @@ def get_rules_for_tenant(tenant_id):
             "direction": rule.direction,
             "threshold": rule.threshold,
             "parameters": json.loads(tr.parameters)
-        })
+        }
+
+        rule_data["parameters"]["rule_id"] = rule.rule_id
+
+        rules.append(rule_data)
 
     return jsonify({"tenant_id": tenant_id, "rules": rules})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

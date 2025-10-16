@@ -84,17 +84,17 @@ export class SelectionPage {
 
     const payload = {
       tenant: this.selectedTenant,
-      date: this.selectedDate.toISOString(),
+      transaction_date: this.selectedDate.toISOString().slice(0, 10).replace(/-/g, ''),
+      rules: this.selectedRules.map(r => r.name),
       scenario: this.selectedScenario,
-      rules: this.selectedRules,
     }
 
     const apiURL = 'http://localhost:5000/generate-data'
 
-    this.http.post(apiURL, payload, { responseType: 'text' }).subscribe({
-      next: (csvData) => {
-        console.log('Response from backend', csvData);
-        this.router.navigate(['/end'], { state: { data: csvData } });
+    this.http.post<any>(apiURL, payload).subscribe({
+      next: (response) => {
+        console.log('Response from backend', response);
+        this.router.navigate(['/end'], { state: { data: response.results } });
       },
       error: (error) => {
         console.error('Error from backend', error);

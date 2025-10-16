@@ -22,22 +22,27 @@ export class EndPage {
   constructor() {
     const isBrowser = typeof window !== 'undefined' && typeof history !== 'undefined';
 
-    let csvData: string | null = null;
+    let data: any[] | null = null;
 
     if (isBrowser) {
-      csvData = history.state?.data;
+      data = history.state?.data;
     }
 
-    // const csvData = history.state?.data;
-    console.log(csvData)
-
-    if (csvData) {
-      this.parseCsvAndSetData(csvData)
-      sessionStorage.setItem('generatedCsvData', csvData)
+    if (data && Array.isArray(data) && data.length > 0) {
+      this.dataSource = data;
+      this.displayedColumns = Object.keys(data[0]);
+      sessionStorage.setItem('generatedTableData', JSON.stringify(data));
     } else {
-      const saved = isBrowser ? sessionStorage.getItem('generatedCsvData') : null;
+      const saved = isBrowser ? sessionStorage.getItem('generatedTableData') : null;
       if (saved) {
-        this.parseCsvAndSetData(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length > 0) {
+          this.dataSource = parsed;
+          this.displayedColumns = Object.keys(parsed[0]);
+        } else {
+          this.warningMessage = '⚠️ No data found. Please generate data first.'
+          setTimeout(() => this.router.navigate(['']), 1500)
+        }
       } else {
         this.warningMessage = '⚠️ No data found. Please generate data first.'
         setTimeout(() => this.router.navigate(['']), 1500)
@@ -61,14 +66,22 @@ export class EndPage {
   }
 
   onDownload() {
-    const csvData = sessionStorage.getItem('generatedCsvData');
-    if (!csvData) return;
+    const data = this.dataSource;
 
-    const blob = new Blob([csvData], { type: 'text/csv' });
+    // Convert each row to your custom format
+    const txtRows = data.map(row =>
+      `${row.tenant}${row.transaction_date}${row.transaction_id}~##~${row.tenant}~##~CN1021523002118${row.currency}~##~${row.amount}~##~~##~${row.scenario}\n` +
+      `${row.rule_id}\n` +
+      "0320331~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~TCOECDEGEN~##~~##~~##~CNMNTXN99~##~~##~20320331124925~##~UOB~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~6000~##~CNY~##~~##~~##~~##~~##~~##~~1~##~~##~~##~~##~~##~~##~RBK~##~~##~110~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~CN_CN~##~~##~~##~~##~~##~~##~4832~##~~##~~##~~##~~##~C~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~\n"
+    );
+
+    const txtData = txtRows.join('\n');
+
+    const blob = new Blob([txtData], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'generated_data.csv';
+    a.download = 'generated_data.txt';
     a.click();
     URL.revokeObjectURL(url);
   }

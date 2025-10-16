@@ -1,49 +1,76 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-end-page',
+  standalone: true,
   imports: [CommonModule, MatButtonModule, MatTableModule],
   templateUrl: './end-page.html',
   styleUrl: './end-page.scss'
 })
 export class EndPage {
-  constructor(private router: Router) { }
+  private router = inject(Router)
 
-  displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
+  displayedColumns: string[] = [];
+  dataSource: any[] = [];
+  warningMessage: string = ''
 
-  dataSource = [
-    { position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-    { position: 2, name: 'Helium', weight: 4.0026, symbol: 'He' },
-    { position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-    { position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-    { position: 5, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-    { position: 6, name: 'Helium', weight: 4.0026, symbol: 'He' },
-    { position: 7, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-    { position: 8, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-    { position: 9, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-    { position: 10, name: 'Helium', weight: 4.0026, symbol: 'He' },
-    { position: 11, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-    { position: 12, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-    { position: 13, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-    { position: 14, name: 'Helium', weight: 4.0026, symbol: 'He' },
-    { position: 15, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-    { position: 16, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-    { position: 17, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-    { position: 18, name: 'Helium', weight: 4.0026, symbol: 'He' },
-    { position: 19, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-    { position: 20, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-    { position: 21, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-    { position: 22, name: 'Helium', weight: 4.0026, symbol: 'He' },
-    { position: 23, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-    { position: 24, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-  ];
+  constructor() {
+    const isBrowser = typeof window !== 'undefined' && typeof history !== 'undefined';
+
+    let csvData: string | null = null;
+
+    if (isBrowser) {
+      csvData = history.state?.data;
+    }
+
+    // const csvData = history.state?.data;
+    console.log(csvData)
+
+    if (csvData) {
+      this.parseCsvAndSetData(csvData)
+      sessionStorage.setItem('generatedCsvData', csvData)
+    } else {
+      const saved = isBrowser ? sessionStorage.getItem('generatedCsvData') : null;
+      if (saved) {
+        this.parseCsvAndSetData(saved);
+      } else {
+        this.warningMessage = '⚠️ No data found. Please generate data first.'
+        setTimeout(() => this.router.navigate(['']), 1500)
+      }
+    }
+  }
+
+  parseCsvAndSetData(csvText: string) {
+    const rows = csvText.trim().split('\n').map(r => r.split(',').map(v => v.trim()));
+    if (rows.length === 0) return;
+
+    const headers = rows[0];
+    const data = rows.slice(1).map(r => {
+      const obj: any = {};
+      headers.forEach((h, i) => obj[h] = r[i]);
+      return obj;
+    });
+
+    this.displayedColumns = headers;
+    this.dataSource = data;
+  }
 
   onDownload() {
-    console.log("Downloading data...");
+    const csvData = sessionStorage.getItem('generatedCsvData');
+    if (!csvData) return;
+
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'generated_data.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   onCancel() {

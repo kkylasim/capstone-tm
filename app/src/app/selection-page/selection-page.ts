@@ -8,8 +8,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
 
 @Component({
   selector: 'app-selection-page',
@@ -31,7 +32,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./selection-page.scss']
 })
 export class SelectionPage {
-  constructor(private router: Router) { }
+  constructor(private router: Router, private http: HttpClient) { }
   tenants = [1, 2, 3];
   scenarios = ['Positive', 'Negative', 'Boundary'];
   selectedTenant: number | null = null;
@@ -64,6 +65,25 @@ export class SelectionPage {
     }
 
     this.warningMessage = ''
-    this.router.navigate(['/end']);
+
+    const payload = {
+      tenant: this.selectedTenant,
+      date: this.selectedDate.toISOString(),
+      scenario: this.selectedScenario,
+      options: this.selectedOptions,
+    }
+
+    const apiURL = 'http://localhost:5000/generate-data'
+
+    this.http.post(apiURL, payload, { responseType: 'text' }).subscribe({
+      next: (csvData) => {
+        console.log('Response from backend', csvData);
+        this.router.navigate(['/end'], { state: { data: csvData } });
+      },
+      error: (error) => {
+        console.error('Error from backend', error);
+        this.warningMessage = '❌ Failed to generate data. Please try again.'
+      }
+    })
   }
 }

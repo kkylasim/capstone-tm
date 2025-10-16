@@ -1,7 +1,9 @@
 <div class="content">
   <div class="result-container">
     <h2>Data Generation Results</h2>
-
+    <div class="warning" *ngIf="warningMessage" style="color: red;">
+      {{ warningMessage }}
+    </div>
     <div class="result-scroll">
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
@@ -19,7 +21,7 @@
 
     <div class="button-container">
       <button mat-raised-button color="primary" (click)="onCancel()" class="button">
-        Cancel
+        Back
       </button>
       <button mat-raised-button color="primary" (click)="onDownload()" class="button">
         Download

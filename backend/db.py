@@ -57,6 +57,86 @@ class TenantRule(db.Model):
 with app.app_context():
     db.create_all()
 
+    # Only seed data if tables are empty
+    if not Tenant.query.first():
+
+        tenant1 = Tenant(tenant_name="Alpha Bank")
+        tenant2 = Tenant(tenant_name="Beta Fintech")
+        tenant3 = Tenant(tenant_name="Gamma Payments")
+
+        db.session.add_all([tenant1, tenant2, tenant3])
+        db.session.commit()
+
+        rules_data = [
+            {
+                "rule_name": "High Transaction Amount",
+                "rule_description": "Flags transactions above threshold",
+                "rule_type": "transaction amount",
+                "direction": "greater than",
+                "threshold": 10000.0,
+                "parameters": {"currency": "USD"}
+            },
+            {
+                "rule_name": "Prohibited Country Transaction",
+                "rule_description": "Blocks transactions to high-risk countries",
+                "rule_type": "country",
+                "prohibited_country": "Iran",
+                "parameters": {"severity": "high"}
+            },
+            {
+                "rule_name": "Frequent Transactions",
+                "rule_description": "Flags if transactions exceed frequency limit",
+                "rule_type": "frequency",
+                "direction": "greater than",
+                "frequency": 5,
+                "parameters": {"window": "1 day"}
+            },
+            {
+                "rule_name": "Low Transaction Amount",
+                "rule_description": "Flags suspiciously small transactions",
+                "rule_type": "transaction amount",
+                "direction": "less than",
+                "threshold": 5.0,
+                "parameters": {"alert_level": "low"}
+            }
+        ]
+
+        rules = []
+        for r in rules_data:
+            rule = Rule(
+                rule_name=r["rule_name"],
+                rule_description=r["rule_description"],
+                rule_type=r["rule_type"],
+                prohibited_country=r.get("prohibited_country"),
+                frequency=r.get("frequency"),
+                direction=r.get("direction"),
+                threshold=r.get("threshold"),
+                parameters=json.dumps(r["parameters"])
+            )
+            rules.append(rule)
+        db.session.add_all(rules)
+        db.session.commit()
+
+        # --- Tenant Rules (link tenants to rules) ---
+        tenant_rules = [
+            TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
+            TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
+            TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
+
+            TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
+            TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
+            TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
+
+            TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
+            TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
+            TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
+        ]
+
+        db.session.add_all(tenant_rules)
+        db.session.commit()
+
+        print("Sample data addded")
+
 
 @app.route('/tenants', methods=['POST'])
 def create_tenant():
@@ -141,11 +221,13 @@ def get_rules_for_tenant(tenant_id):
             "parameters": json.loads(tr.parameters)
         }
 
+        # Include rule_id in parameters for clarity
         rule_data["parameters"]["rule_id"] = rule.rule_id
 
         rules.append(rule_data)
 
     return jsonify({"tenant_id": tenant_id, "rules": rules})
+
 
 
 if __name__ == '__main__':

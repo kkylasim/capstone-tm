@@ -35,27 +35,34 @@
 
     <!-- Dual List Boxes -->
     <div class="box-container">
-        <div class="list-box">
-            <h3>Rules</h3>
+        <div class="list-box" style="flex: 1;">
+            <h3>Available Rules</h3>
             <mat-selection-list #availableList>
-                <mat-list-option *ngFor="let item of availableOptions" [value]="item">
-                    {{ item }}
+                <mat-list-option *ngFor="let rule of availableRules" [value]="rule">
+                    <div>
+                        <p>{{ rule.name }}</p>
+                        <!-- <p class="description">{{ rule.description }}</p> -->
+                    </div>
                 </mat-list-option>
             </mat-selection-list>
-            <button mat-raised-button color="primary" (click)="moveSelected(availableList.selectedOptions.selected)">
+            <button mat-raised-button color="primary" style="margin-top: 10px;"
+                (click)="moveSelected(availableList.selectedOptions.selected)">
                 Select rules →
             </button>
         </div>
 
-        <div class="list-box">
+        <div class="list-box" style="flex: 1;">
             <h3>Applied Rules</h3>
             <mat-selection-list #selectedList>
-                <mat-list-option *ngFor="let item of selectedOptions" [value]="item">
-                    {{ item }}
+                <mat-list-option *ngFor="let rule of selectedRules" [value]="rule">
+                    <div>
+                        <p>{{ rule.name }}</p>
+                        <!-- <p class="description">{{ rule.description }}</p> -->
+                    </div>
                 </mat-list-option>
             </mat-selection-list>
-            <button mat-raised-button color="warn" (click)="removeSelected(selectedList.selectedOptions.selected)"
-                class="align-right">
+            <button mat-raised-button color="warn" style="margin-top: 10px;"
+                (click)="removeSelected(selectedList.selectedOptions.selected)">
                 ← Remove rules
             </button>
         </div>

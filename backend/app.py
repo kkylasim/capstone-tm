@@ -1,18 +1,14 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
-import os
+import os, io, csv
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-
-@app.route('/api/hello')
-def hello():
-    return jsonify({"message": "Hello from Flask backend!"})
 
 # Set your OpenAI API key from the environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -75,6 +71,42 @@ def generate_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/config', methods=['GET'])
+def get_config():
+    tenants = ["Tenant 1", "Tenant 2", "Tenant 3"]
+
+    rules = [
+        {"name": "Option A", "description": "Enables feature A."},
+        {"name": "Option B", "description": "Enables feature B."},
+        {"name": "Option C", "description": "Test scenario C."},
+        {"name": "Option D", "description": "Special configuration D."}
+    ]
+
+    return jsonify({
+        "tenants": tenants,
+        "rules": rules
+    })
+
+@app.route('/generate-data', methods=['POST'])
+def generate_data():
+    data = request.get_json()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Name', 'Score', 'Status'])
+    writer.writerow(['Alice', 95, 'Pass'])
+    writer.writerow(['Bob', 80, 'Pass'])
+    writer.writerow(['Eve', 60, 'Borderline'])
+
+    csv_data = output.getvalue()
+    output.close()
+
+    return Response(
+        csv_data,
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=data.csv'}
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)

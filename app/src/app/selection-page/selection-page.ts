@@ -8,8 +8,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
 
 @Component({
   selector: 'app-selection-page',
@@ -31,39 +32,74 @@ import { Router } from '@angular/router';
   styleUrls: ['./selection-page.scss']
 })
 export class SelectionPage {
-  constructor(private router: Router) { }
-  tenants = [1, 2, 3];
+  constructor(private router: Router, private http: HttpClient) { }
+  tenants: string[] = [];
   scenarios = ['Positive', 'Negative', 'Boundary'];
-  selectedTenant: number | null = null;
+  availableRules: { name: string; description: string }[] = []
+
+  selectedTenant: string | null = null;
   selectedDate: Date | null = null;
   selectedScenario: string | null = null;
-
-  availableOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
-  selectedOptions: string[] = [];
-
+  selectedRules: { name: string; description: string }[] = [];
   warningMessage: string = '';
 
+  ngOnInit() {
+    this.fetchConfigData()
+  }
+
+  fetchConfigData() {
+    const apiURL = 'http://localhost:5000/config';
+
+    this.http.get<any>(apiURL).subscribe({
+      next: (data) => {
+        console.log('Config data received:', data);
+        this.tenants = data.tenants || [];
+        this.availableRules = data.rules || [];
+      },
+      error: (err) => {
+        console.error('Failed to load config data:', err);
+        this.warningMessage = '⚠️ Failed to load configuration data. Please refresh or try again later.';
+      }
+    });
+  }
   moveSelected(selectedItems: any[]) {
-    const values = selectedItems.map((x: any) => x.value);
-    this.selectedOptions.push(...values);
-    this.availableOptions = this.availableOptions.filter(x => !values.includes(x));
+    const items = selectedItems.map((x: any) => x.value);
+    this.selectedRules.push(...items);
+    this.availableRules = this.availableRules.filter(r => !items.includes(r));
   }
 
   removeSelected(selectedItems: any[]) {
-    const values = selectedItems.map((x: any) => x.value);
-    this.availableOptions.push(...values);
-    this.selectedOptions = this.selectedOptions.filter(
-      (x) => !values.includes(x)
-    );
+    const items = selectedItems.map((x: any) => x.value);
+    this.availableRules.push(...items);
+    this.selectedRules = this.selectedRules.filter(r => !items.includes(r))
   }
 
   generateData() {
-    if (this.selectedTenant == null || this.selectedDate == null || this.selectedOptions.length == 0 || this.selectedScenario == null) {
-      this.warningMessage = '⚠️ Please select a tenant, a date, a scenario and at least one option before proceeding.';
+    if (this.selectedTenant == null || this.selectedDate == null || this.selectedRules.length == 0 || this.selectedScenario == null) {
+      this.warningMessage = '⚠️ Please select a tenant, a date, a scenario and at least one rule before proceeding.';
       return;
     }
 
     this.warningMessage = ''
-    this.router.navigate(['/end']);
+
+    const payload = {
+      tenant: this.selectedTenant,
+      date: this.selectedDate.toISOString(),
+      scenario: this.selectedScenario,
+      rules: this.selectedRules,
+    }
+
+    const apiURL = 'http://localhost:5000/generate-data'
+
+    this.http.post(apiURL, payload, { responseType: 'text' }).subscribe({
+      next: (csvData) => {
+        console.log('Response from backend', csvData);
+        this.router.navigate(['/end'], { state: { data: csvData } });
+      },
+      error: (error) => {
+        console.error('Error from backend', error);
+        this.warningMessage = '❌ Failed to generate data. Please try again.'
+      }
+    })
   }
 }

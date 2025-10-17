@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 import json
 
-from db import db, Tenant, Rule, TenantRule  
+from db import db, Tenant, Rule, Country, RuleCountry, TenantRule  
 from fake import Data, TransactionInput, Scenario, RuleType, Direction
 
 # Load environment variables from .env file
@@ -20,94 +20,129 @@ db.init_app(app)
 
 ## Initialising tables ##
 with app.app_context():
+    #db.drop_all()
     db.create_all()
 
 ## Helper for seeding data ##
-def seed_data():
-    """Helper to seed tenants and rules."""
-    Tenant.query.delete()
-    Rule.query.delete()
-    TenantRule.query.delete()
-    db.session.commit()
+# def seed_data():
+#     """Helper to seed tenants and rules."""
+#     #Tenant.query.delete()
+#     #Rule.query.delete()
+#     #Country.query.delete()
+#     #RuleCountry.query.delete()
+#     #TenantRule.query.delete()
+#     #db.session.commit()
 
-    tenant1 = Tenant(tenant_name="Alpha Bank")
-    tenant2 = Tenant(tenant_name="Beta Fintech")
-    tenant3 = Tenant(tenant_name="Gamma Payments")
+#     # tenant1 = Tenant(tenant_code='NK', tenant_name="North Korea")
+#     # tenant2 = Tenant(tenant_code='IR', tenant_name="Iran")
+#     # tenant3 = Tenant(tenant_code='SY', tenant_name="Syria")
+#     # tenant4 = Tenant(tenant_code='SG', tenant_name="Singapore")
+#     # tenant5 = Tenant(tenant_code='MY', tenant_name="Malaysia")
 
-    db.session.add_all([tenant1, tenant2, tenant3])
-    db.session.commit()
+#     tenant1 = Tenant(tenant_name="Alpha Bank")
+#     tenant2 = Tenant(tenant_name="Beta Fintech")
+#     tenant3 = Tenant(tenant_name="Gamma Payments")
 
-    rules_data = [
-        {
-            "rule_name": "High Transaction Amount",
-            "rule_description": "Flags transactions above threshold",
-            "rule_type": "transaction amount",
-            "direction": "greater than",
-            "threshold": 10000.0,
-            "parameters": {"currency": "USD"}
-        },
-        {
-            "rule_name": "Prohibited Country Transaction",
-            "rule_description": "Blocks transactions to high-risk countries",
-            "rule_type": "country",
-            "prohibited_country": "Iran",
-            "parameters": {"severity": "high"}
-        },
-        {
-            "rule_name": "Frequent Transactions",
-            "rule_description": "Flags if transactions exceed frequency limit",
-            "rule_type": "frequency",
-            "direction": "greater than",
-            "frequency": 5,
-            "parameters": {"window": "1 day"}
-        },
-        {
-            "rule_name": "Low Transaction Amount",
-            "rule_description": "Flags suspiciously small transactions",
-            "rule_type": "transaction amount",
-            "direction": "less than",
-            "threshold": 5.0,
-            "parameters": {"alert_level": "low"}
-        }
-    ]
 
-    rules = []
-    for r in rules_data:
-        rule = Rule(
-            rule_name=r["rule_name"],
-            rule_description=r["rule_description"],
-            rule_type=r["rule_type"],
-            prohibited_country=r.get("prohibited_country"),
-            frequency=r.get("frequency"),
-            direction=r.get("direction"),
-            threshold=r.get("threshold"),
-            parameters=json.dumps(r["parameters"])
-        )
-        rules.append(rule)
-    db.session.add_all(rules)
-    db.session.commit()
+#     db.session.add_all([tenant1, tenant2, tenant3])
+#     db.session.commit()
 
-    # --- Tenant Rules (link tenants to rules) ---
-    tenant_rules = [
-        TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
-        TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
-        TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
+#     # ---- Seed Rules ----
+#     rules_data = [
+#         {
+#             "rule_name": "High Transaction Amount",
+#             "rule_description": "Flags transactions above threshold",
+#             "rule_type": "transaction amount",
+#             "direction": "greater than",
+#             "threshold": 10000.0,
+#             "parameters": {"currency": "USD"}
+#         },
+#         {
+#             "rule_name": "Prohibited Country Transaction",
+#             "rule_description": "Blocks transactions to high-risk countries",
+#             "rule_type": "country",
+#             "parameters": {"severity": "high"}
+#         },
+#         {
+#             "rule_name": "Frequent Transactions",
+#             "rule_description": "Flags if transactions exceed frequency limit",
+#             "rule_type": "frequency",
+#             "direction": "greater than",
+#             "frequency": 5,
+#             "parameters": {"window": "1 day"}
+#         },
+#         {
+#             "rule_name": "Low Transaction Amount",
+#             "rule_description": "Flags suspiciously small transactions",
+#             "rule_type": "transaction amount",
+#             "direction": "less than",
+#             "threshold": 5.0,
+#             "parameters": {"alert_level": "low"}
+#         }
+#     ]
 
-        TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
-        TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
-        TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
+#     rules = []
+#     for r in rules_data:
+#         rule = Rule(
+#             rule_name=r["rule_name"],
+#             rule_description=r["rule_description"],
+#             rule_type=r["rule_type"],
+#             frequency=r.get("frequency"),
+#             direction=r.get("direction"),
+#             threshold=r.get("threshold"),
+#             parameters=json.dumps(r["parameters"])
+#         )
+#         rules.append(rule)
+#     db.session.add_all(rules)
+#     db.session.commit()
 
-        TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
-        TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
-        TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
-    ]
+#     # ---- Seed Countries ----
+#     countries_data = [
+#         {"country_name": "North Korea", "risk_tier": "high"},
+#         {"country_name": "Iran", "risk_tier": "high"},
+#         {"country_name": "Syria", "risk_tier": "high"},
+#         {"country_name": "Singapore", "risk_tier": "low"},
+#         {"country_name": "Malaysia", "risk_tier": "medium"}
+#     ]
 
-    db.session.add_all(tenant_rules)
-    db.session.commit()
+#     countries = []
+#     for c in countries_data:
+#         country = Country(country_name=c["country_name"], risk_tier=c["risk_tier"])
+#         countries.append(country)
+#     db.session.add_all(countries)
+#     db.session.commit()
 
-    print("Sample data addded")
+#     rule_country_links = [
+#         {"rule": rules[1], "country": countries[0]},  # NK
+#         {"rule": rules[1], "country": countries[1]},  # Iran
+#         {"rule": rules[1], "country": countries[2]},  # Syria
+#     ]
 
-    return "Database seeded successfully!"
+#     for link in rule_country_links:
+#         db.session.add(RuleCountry(rule=link["rule"], country=link["country"]))
+#     db.session.commit()
+
+
+#     tenant_rules = [
+#         TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
+#         TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
+#         TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
+
+#         TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
+#         TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
+#         TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
+
+#         TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
+#         TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
+#         TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
+#     ]
+
+#     db.session.add_all(tenant_rules)
+#     db.session.commit()
+
+#     print("Sample data addded")
+
+#     return "Database seeded successfully!"
 
 
 
@@ -118,32 +153,20 @@ def hello():
 
 @app.route('/config', methods=['GET'])
 def get_config():
-    # tenants = ["Tenant 1", "Tenant 2", "Tenant 3"]
-
-    # rules = [
-    #     {"name": "Option A", "description": "Enables feature A."},
-    #     {"name": "Option B", "description": "Enables feature B."},
-    #     {"name": "Option C", "description": "Test scenario C."},
-    #     {"name": "Option D", "description": "Special configuration D."}
-    # ]
-
-    # return jsonify({
-    #     "tenants": tenants,
-    #     "rules": rules
-    # })
     tenants = [t.tenant_name for t in Tenant.query.all()]
     rules = [{"id": r.rule_id, "name": r.rule_name, "description": r.rule_description} for r in Rule.query.all()]
     return jsonify({"tenants": tenants, "rules": rules})
 
-@app.route('/seed', methods=['POST'])
-def seed_database():
-    """HTTP endpoint to seed DB."""
-    msg = seed_data()
-    return jsonify({"message": msg})
+# @app.route('/seed', methods=['POST'])
+# def seed_database():
+#     """HTTP endpoint to seed DB."""
+#     msg = seed_data()
+#     return jsonify({"message": msg})
 
 @app.route('/generate-data', methods=['POST'])
 def generate_data():
     data = request.get_json()
+    print(data)
 
     tenant = data.get('tenant', 'CN')
     transaction_date = data.get('transaction_date', '20320331')
@@ -159,28 +182,36 @@ def generate_data():
     #     8000 - Amount of transaction 
     #     CNY - Currency of transactions 
     #     RBK - Retail banking source system CN-CN - From Country - To Country 
+    countries = Country.query.all()
+    risk_dict = {
+        tier: [c.country_name for c in countries if c.risk_tier == tier]
+        for tier in {"high", "medium", "low"}
+    }
+    #print(risk_dict)
     inputs = []
-    for id in rules:
-        rule = Rule.query.get(id)
+    for name in rules:
+        #rule = Rule.query.get(Rule.rule_name).filter(Rule.rule_name==name).all()
+        rule = Rule.query.filter(Rule.rule_name==name).first()
+        print('rule query sucess')
+        #print(rule)
         if not rule:
-            return jsonify({"error": f"Rule ID {id} not found"}), 404
-        #TEMP Prohibited country
-        prob_temp = 'PK'
+            return jsonify({"error": f"Rule ID {name} not found"}), 404
+
         txn_input = TransactionInput(
             tenant=tenant,
             transaction_date=transaction_date,
-            scenario=Scenario(scenario),
+            scenario=Scenario(scenario.lower()),
             rule_id=str(rule.rule_id),
             rule=rule.rule_description or rule.rule_name,
             rule_type=RuleType(rule.rule_type),
-            prohibited_country=prob_temp,
             frequency=rule.frequency,
             direction=Direction(rule.direction) if rule.direction else None,
             threshold=rule.threshold,
         )
         inputs.append(txn_input)
-    df = Data.generate_dataset(inputs)
+    df = Data.generate_dataset(inputs, risk_dict)
     results = df.to_dict(orient='records')
+    #print(results)
     return jsonify({"results": results})
 
 
@@ -200,11 +231,11 @@ def generate_data():
 
     # return jsonify({"results": mock_data})
 
-@app.cli.command("seed")
-def seed():
-    """Command line: flask --app app.py seed"""
-    with app.app_context():
-        print(seed_data())
+# @app.cli.command("seed")
+# def seed():
+#     """Command line: flask --app app.py seed"""
+#     with app.app_context():
+#         print(seed_data())
 
 
 if __name__ == "__main__":

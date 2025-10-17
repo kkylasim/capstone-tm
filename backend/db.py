@@ -12,7 +12,7 @@ db = SQLAlchemy(app)
 class Scenario(str, Enum):
     positive = "positive"
     negative = "negative"
-    borderline = "borderline"
+    boundary = "boundary"
 
 
 class RuleType(str, Enum):
@@ -29,6 +29,7 @@ class Direction(str, Enum):
 class Tenant(db.Model):
     __tablename__ = 'tenants'
     tenant_id = db.Column(db.Integer, primary_key=True)
+    tenant_code = db.Column(db.String, unique=True, nullable=False)
     tenant_name = db.Column(db.String, nullable=False)
 
 
@@ -47,6 +48,7 @@ class Rule(db.Model):
 class Country(db.Model):
     __tablename__ = 'countries'
     country_id = db.Column(db.Integer, primary_key=True)
+    country_code = db.Column(db.String, unique=True, nullable=False)
     country_name = db.Column(db.String, unique=True, nullable=False)
     risk_tier = db.Column(db.String, nullable=False)  # e.g., high, medium, low
 
@@ -72,15 +74,39 @@ class TenantRule(db.Model):
     rule = db.relationship('Rule', backref=db.backref('tenant_rules', cascade="all, delete-orphan"))
 
 with app.app_context():
+    db.drop_all()
     db.create_all()
 
     # Seed only if empty
     if not Tenant.query.first():
-        tenant1 = Tenant(tenant_name="Alpha Bank")
-        tenant2 = Tenant(tenant_name="Beta Fintech")
-        tenant3 = Tenant(tenant_name="Gamma Payments")
+        # tenant1 = Tenant(tenant_name="Alpha Bank")
+        # tenant2 = Tenant(tenant_name="Beta Fintech")
+        # tenant3 = Tenant(tenant_name="Gamma Payments")
 
-        db.session.add_all([tenant1, tenant2, tenant3])
+        uob_tenants = [
+            ('AU', "Australia"),
+            ('BN', "Brunei"),
+            ('CA', "Canada"),
+            ('CN', "Mainland China"),
+            ('FR', "France"),
+            ('HK', "Hong Kong"),
+            ('IN', "India"),
+            ('ID', "Indonesia"),
+            ('JP', "Japan"),
+            ('MY', "Malaysia"),
+            ('MM', "Myanmar"),
+            ('PH', "Philippines"),
+            ('SG', "Singapore"),
+            ('KR', "South Korea"),
+            ('TW', "Taiwan"),
+            ('TH', "Thailand"),
+            ('GB', "United Kingdom"),
+            ('US', "United States of America"),
+            ('VN', "Vietnam")
+        ]
+        tenants = [Tenant(tenant_code=code, tenant_name=name) for code, name in uob_tenants]
+
+        db.session.add_all(tenants)
         db.session.commit()
 
         # ---- Seed Rules ----
@@ -133,17 +159,64 @@ with app.app_context():
         db.session.commit()
 
         # ---- Seed Countries ----
+        # countries_data = [
+        #     {"country_name": "North Korea", "risk_tier": "high"},
+        #     {"country_name": "Iran", "risk_tier": "high"},
+        #     {"country_name": "Syria", "risk_tier": "high"},
+        #     {"country_name": "Singapore", "risk_tier": "low"},
+        #     {"country_name": "Malaysia", "risk_tier": "medium"}
+        # ]
+
         countries_data = [
-            {"country_name": "North Korea", "risk_tier": "high"},
-            {"country_name": "Iran", "risk_tier": "high"},
-            {"country_name": "Syria", "risk_tier": "high"},
-            {"country_name": "Singapore", "risk_tier": "low"},
-            {"country_name": "Malaysia", "risk_tier": "medium"}
+            # High-risk countries
+            {"country_code": "KP", "country_name": "North Korea", "risk_tier": "high"},
+            {"country_code": "IR", "country_name": "Iran", "risk_tier": "high"},
+            {"country_code": "SY", "country_name": "Syria", "risk_tier": "high"},
+            {"country_code": "AF", "country_name": "Afghanistan", "risk_tier": "high"},
+            {"country_code": "IQ", "country_name": "Iraq", "risk_tier": "high"},
+            {"country_code": "VE", "country_name": "Venezuela", "risk_tier": "high"},
+            {"country_code": "SO", "country_name": "Somalia", "risk_tier": "high"},
+            {"country_code": "LY", "country_name": "Libya", "risk_tier": "high"},
+            {"country_code": "YE", "country_name": "Yemen", "risk_tier": "high"},
+            {"country_code": "SD", "country_name": "Sudan", "risk_tier": "high"},
+            {"country_code": "SS", "country_name": "South Sudan", "risk_tier": "high"},
+            {"country_code": "HT", "country_name": "Haiti", "risk_tier": "high"},
+            {"country_code": "CD", "country_name": "Democratic Republic of the Congo", "risk_tier": "high"},
+            {"country_code": "CF", "country_name": "Central African Republic", "risk_tier": "high"},
+            {"country_code": "ML", "country_name": "Mali", "risk_tier": "high"},
+
+            # Medium-risk countries
+            {"country_code": "MY", "country_name": "Malaysia", "risk_tier": "medium"},
+            {"country_code": "TH", "country_name": "Thailand", "risk_tier": "medium"},
+            {"country_code": "IN", "country_name": "India", "risk_tier": "medium"},
+            {"country_code": "ID", "country_name": "Indonesia", "risk_tier": "medium"},
+            {"country_code": "PH", "country_name": "Philippines", "risk_tier": "medium"},
+            {"country_code": "CN", "country_name": "China", "risk_tier": "medium"},
+            {"country_code": "MM", "country_name": "Myanmar", "risk_tier": "medium"},
+            {"country_code": "VN", "country_name": "Vietnam", "risk_tier": "medium"},
+            {"country_code": "BR", "country_name": "Brazil", "risk_tier": "medium"},
+            {"country_code": "RU", "country_name": "Russia", "risk_tier": "medium"},
+
+            # Low-risk countries
+            {"country_code": "SG", "country_name": "Singapore", "risk_tier": "low"},
+            {"country_code": "AU", "country_name": "Australia", "risk_tier": "low"},
+            {"country_code": "CA", "country_name": "Canada", "risk_tier": "low"},
+            {"country_code": "JP", "country_name": "Japan", "risk_tier": "low"},
+            {"country_code": "DE", "country_name": "Germany", "risk_tier": "low"},
+            {"country_code": "US", "country_name": "United States of America", "risk_tier": "low"},
+            {"country_code": "GB", "country_name": "United Kingdom", "risk_tier": "low"},
+            {"country_code": "KR", "country_name": "South Korea", "risk_tier": "low"},
+            {"country_code": "HK", "country_name": "Hong Kong", "risk_tier": "low"},
+            {"country_code": "FR", "country_name": "France", "risk_tier": "low"},
+            {"country_code": "TW", "country_name": "Taiwan", "risk_tier": "low"},
+            {"country_code": "NZ", "country_name": "New Zealand", "risk_tier": "low"}
         ]
 
         countries = []
         for c in countries_data:
-            country = Country(country_name=c["country_name"], risk_tier=c["risk_tier"])
+            country = Country(country_code=c["country_code"], 
+                              country_name=c["country_name"], 
+                              risk_tier=c["risk_tier"])
             countries.append(country)
         db.session.add_all(countries)
         db.session.commit()
@@ -160,17 +233,17 @@ with app.app_context():
 
 
         tenant_rules = [
-            TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
-            TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
-            TenantRule(tenant_id=tenant1.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
+            TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
+            TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
+            TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
 
-            TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
-            TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
-            TenantRule(tenant_id=tenant2.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
+            TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
+            TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
+            TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
 
-            TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
-            TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
-            TenantRule(tenant_id=tenant3.tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
+            TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
+            TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
+            TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
         ]
 
         db.session.add_all(tenant_rules)

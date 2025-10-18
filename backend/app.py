@@ -48,9 +48,10 @@ def generate_data():
 
     countries = Country.query.all()
     risk_dict = {
-        tier: [c.country_name for c in countries if c.risk_tier == tier]
+        tier: [c.country_code for c in countries if c.risk_tier == tier]
         for tier in {"high", "medium", "low"}
     }
+    country_codes = {c.country_name: c.country_code for c in countries}
     inputs = []
     for name in rules:
         rule = Rule.query.filter(Rule.rule_name==name).first()
@@ -69,7 +70,7 @@ def generate_data():
             threshold=rule.threshold,
         )
         inputs.append(txn_input)
-    df = Data.generate_dataset(inputs, risk_dict)
+    df = Data.generate_dataset(inputs, risk_dict, country_codes)
     results = df.to_dict(orient='records')
     return jsonify({"results": results})
 

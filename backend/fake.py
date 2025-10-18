@@ -57,7 +57,6 @@ class TransactionInput(BaseModel):
     rule_id: str = Field(..., description="Rule ID (e.g., 'AML-FTF-ALL-ALL-A-D07-FTR')")
     rule: str = Field(..., description="Human-readable rule description")
     rule_type: RuleType
-    #prohibited_country: str | None = Field(None, description="Prohibited country for country rules")
     frequency: int | None = Field(None, description="Frequency for frequency rules")
     direction: Direction | None = Field(None, description="Direction for amount/frequency rules")
     threshold: float | None = Field(None, description="Threshold for amount/frequency rules")
@@ -128,7 +127,7 @@ class Data:
     #~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~{FromTo}~##~~##~~##~~##~~##~~##~4832~##~~##~~##~~##~~##~C~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~
     '''
 
-    def generate_transaction(input_data: TransactionInput, risk_dict: dict):
+    def generate_transaction(input_data: TransactionInput, risk_dict: dict, country_codes: dict):
         """Generate a fake transaction based on the provided input data."""
         # -------------------------- #
         # Extracting data from input #
@@ -155,7 +154,6 @@ class Data:
                 num_txns = random.randint(frequency - 1, frequency + 1)
             else:  
                 num_txns = random.randint(1, frequency - 2)
-            #base_amount = threshold / num_txns
             base_amount = 10000
             transactions = []
             for i in range(num_txns):
@@ -163,17 +161,8 @@ class Data:
                 transaction_id = f"ATC{random.randint(1000000000, 9999999999)}"
                 currency = random.choice(["CNY", "USD", "EUR", "SGD"])
                 source_system = "ATM"
-                from_country = tenant
+                from_country = country_codes[tenant]
                 to_country = random.choice(["CN", "US", "SG", "DE"])
-
-                # Adjust amount slightly depending on scenario
-                # if scenario == "positive":
-                #     amount = random.uniform(base_amount * 1.05, base_amount * 1.5)
-                # elif scenario == "borderline":
-                #     amount = random.uniform(base_amount * 0.9, base_amount * 1.1)
-                # else:  # negative
-                #     amount = random.uniform(base_amount * 0.3, base_amount * 0.8)
-                
                 amount = random.uniform(base_amount * 0.9, base_amount * 1.1)
 
                 transactions.append({
@@ -199,7 +188,7 @@ class Data:
         transaction_id = f"ATC{random.randint(1000000000, 9999999999)}"
         currency = random.choice(["CNY", "USD", "EUR", "SGD"])
         source_system = random.choice(["RBK", "ATM", "MOB", "IBK"])
-        from_country = tenant
+        from_country = country_codes[tenant]
         
         # ---------- #
         # Rule Logic #
@@ -250,16 +239,16 @@ class Data:
             "Scenario": scenario
         }
 
-    def generate_dataset(inputs: list[TransactionInput], risk_dict: dict, write_path: str = None) -> pd.DataFrame:
+    def generate_dataset(inputs: list[TransactionInput], risk_dict: dict, country_codes: dict, write_path: str = None) -> pd.DataFrame:
         """Generate a dataset of fake transactions for all rule inputs."""
         n_per_rule = random.randint(3, 5)
         all_txns = []
         for inp in inputs:
             if inp.rule_type.value == 'frequency':
-                all_txns.extend(Data.generate_transaction(inp, risk_dict))
+                all_txns.extend(Data.generate_transaction(inp, risk_dict, country_codes))
             else:
                 for _ in range(n_per_rule):
-                    all_txns.append(Data.generate_transaction(inp, risk_dict))
+                    all_txns.append(Data.generate_transaction(inp, risk_dict, country_codes))
         res = pd.DataFrame(all_txns)
         if write_path:
             Data.write_dataset(res, write_path)

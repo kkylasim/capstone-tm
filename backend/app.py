@@ -71,7 +71,6 @@ def generate_data():
         inputs.append(txn_input)
     df = Data.generate_dataset(inputs, risk_dict)
     results = df.to_dict(orient='records')
-    #print(results)
     return jsonify({"results": results})
 
 

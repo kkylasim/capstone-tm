@@ -1,8 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-# import openai
 from dotenv import load_dotenv
-import os
+
+from db import db, Tenant, Rule, Country, RuleCountry, TenantRule  
+from fake import Data, TransactionInput, Scenario, RuleType, Direction
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,9 +11,75 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/api/hello')
-def hello():
-    return jsonify({"message": "Hello from Flask backend!"})
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rules_db.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
+## Initialising tables ##
+with app.app_context():
+    db.create_all()
+
+@app.route('/config', methods=['GET'])
+def get_config():
+    tenants = [t.tenant_name for t in Tenant.query.all()]
+    rules = [{"id": r.rule_id, "name": r.rule_name, "description": r.rule_description} for r in Rule.query.all()]
+    return jsonify({"tenants": tenants, "rules": rules})
+
+@app.route('/generate-data', methods=['POST'])
+def generate_data():
+    """
+    Output format: 
+    Your output must be a text file that contain the following information: 
+    CN - Tenant/Country 
+    20320331 - Transaction date/business data
+    ATC0000000079 - Transaction ID 
+    AML-FTF-ALL-ALL-A-D07-FTR - Rule ID 
+    8000 - Amount of transaction 
+    CNY - Currency of transactions 
+    RBK - Retail banking source system CN-CN - From Country - To Country 
+    """
+    data = request.get_json()
+    print(data)
+
+    tenant = data.get('tenant', 'CN')
+    transaction_date = data.get('transaction_date', '20320331')
+    scenario = data.get('scenario', 'positive')
+    rules = data.get('rules', [])
+
+    countries = Country.query.all()
+    risk_dict = {
+        tier: [c.country_name for c in countries if c.risk_tier == tier]
+        for tier in {"high", "medium", "low"}
+    }
+    inputs = []
+    for name in rules:
+        rule = Rule.query.filter(Rule.rule_name==name).first()
+        if not rule:
+            return jsonify({"error": f"Rule ID {name} not found"}), 404
+
+        txn_input = TransactionInput(
+            tenant=tenant,
+            transaction_date=transaction_date,
+            scenario=Scenario(scenario.lower()),
+            rule_id=str(rule.rule_id),
+            rule=rule.rule_description or rule.rule_name,
+            rule_type=RuleType(rule.rule_type),
+            frequency=rule.frequency,
+            direction=Direction(rule.direction) if rule.direction else None,
+            threshold=rule.threshold,
+        )
+        inputs.append(txn_input)
+    df = Data.generate_dataset(inputs, risk_dict)
+    results = df.to_dict(orient='records')
+    return jsonify({"results": results})
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
+# import openai
 
 # Set your OpenAI API key from the environment variable
 # openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -74,57 +141,3 @@ def hello():
 
 #     except Exception as e:
 #         return jsonify({"error": str(e)}), 500
-
-
-@app.route('/config', methods=['GET'])
-def get_config():
-    tenants = ["Tenant 1", "Tenant 2", "Tenant 3"]
-
-    rules = [
-        {"name": "Option A", "description": "Enables feature A."},
-        {"name": "Option B", "description": "Enables feature B."},
-        {"name": "Option C", "description": "Test scenario C."},
-        {"name": "Option D", "description": "Special configuration D."}
-    ]
-
-    return jsonify({
-        "tenants": tenants,
-        "rules": rules
-    })
-
-@app.route('/generate-data', methods=['POST'])
-def generate_data():
-    data = request.get_json()
-
-    tenant = data.get('tenant', 'CN')
-    transaction_date = data.get('transaction_date', '20320331')
-    scenario = data.get('scenario', 'positive')
-    rules = data.get('rules', [])
-
-    #     Output format: 
-    #     Your output must be a text file that contain the following information: 
-    #     CN - Tenant/Country 
-    #     20320331 - Transaction date/business data
-    #     ATC0000000079 - Transaction ID 
-    #     AML-FTF-ALL-ALL-A-D07-FTR - Rule ID 
-    #     8000 - Amount of transaction 
-    #     CNY - Currency of transactions 
-    #     RBK - Retail banking source system CN-CN - From Country - To Country 
-    mock_data = []
-    for idx, rule_id in enumerate(rules):
-        mock_data.append({
-            "tenant": tenant,
-            "transaction_date": transaction_date,
-            "transaction_id": f"ATC00000000{79 + idx}",
-            "rule_id": rule_id,
-            "amount": str(8000 + idx * 2000),
-            "currency": "CNY",
-            "source_system": "RBK",
-            "from_to_country": "CN_CN" if idx % 2 == 0 else "CN_SG",
-            "scenario": scenario
-        })
-
-    return jsonify({"results": mock_data})
-
-if __name__ == "__main__":
-    app.run(debug=True)

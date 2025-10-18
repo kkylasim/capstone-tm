@@ -14,46 +14,13 @@ Amount of transaction - 8000
 Currency of transactions - CNY
 Retail banking source system - RBK
 From country-To country - CN-CN
-
-Tables avail:
-
-t1
-tenant_id
-tenant_name
-
-t2
-rule_id
-rule_name
-rule_description
-rule_query
-
-t3
-tenant_id
-rule_id
-
-t4
-id
-tenant_id
-customer_id
-txn_date
-amount
-country
-source_system
-
-t5
-alert_id
-tenant_id
-rule_id
-customer_id
-txn_date
-description
 '''
 
 
 class Scenario(str, Enum):
     positive = "positive"
     negative = "negative"
-    borderline = "borderline"
+    boundary = "boundary"
 
 class RuleType(str, Enum):
     transaction_amount = "transaction amount"
@@ -90,7 +57,7 @@ class TransactionInput(BaseModel):
     rule_id: str = Field(..., description="Rule ID (e.g., 'AML-FTF-ALL-ALL-A-D07-FTR')")
     rule: str = Field(..., description="Human-readable rule description")
     rule_type: RuleType
-    prohibited_country: str | None = Field(None, description="Prohibited country for country rules")
+    #prohibited_country: str | None = Field(None, description="Prohibited country for country rules")
     frequency: int | None = Field(None, description="Frequency for frequency rules")
     direction: Direction | None = Field(None, description="Direction for amount/frequency rules")
     threshold: float | None = Field(None, description="Threshold for amount/frequency rules")
@@ -131,11 +98,11 @@ class TransactionInput(BaseModel):
           TransactionInput(
               tenant="CN",
               transaction_date="20320331",
-              scenario=Scenario.borderline,
+              scenario=Scenario.boundary,
               rule_id='2',
               rule_type=RuleType.country,
-              rule="Transaction made to Iran",
-              prohibited_country="IR"
+              rule="Transaction made to Iran"
+              #prohibited_country="IR"
           ),
           # Frequency rule
           TransactionInput(
@@ -161,7 +128,7 @@ class Data:
     #~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~{FromTo}~##~~##~~##~~##~~##~~##~4832~##~~##~~##~~##~~##~C~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~~##~
     '''
 
-    def generate_transaction(input_data: TransactionInput):
+    def generate_transaction(input_data: TransactionInput, risk_dict: dict):
         """Generate a fake transaction based on the provided input data."""
         # -------------------------- #
         # Extracting data from input #
@@ -175,8 +142,6 @@ class Data:
         direction = input_data.direction.value if input_data.direction else None
         frequency = input_data.frequency
         threshold = input_data.threshold
-        prohibited_country = input_data.prohibited_country
-
 
         # -------------------------- #
         # Frequency RuleType Special #
@@ -184,7 +149,14 @@ class Data:
         if rule_type == "frequency":
             # Frequency means multiple transactions
             num_txns = frequency
-            base_amount = threshold / num_txns
+            if scenario == "positive":
+                num_txns = random.randint(frequency + 2, frequency + 5)
+            elif scenario == "boundary":
+                num_txns = random.randint(frequency - 1, frequency + 1)
+            else:  
+                num_txns = random.randint(1, frequency - 2)
+            #base_amount = threshold / num_txns
+            base_amount = 10000
             transactions = []
             for i in range(num_txns):
                 txn_date = (base_date + timedelta(days=i)).strftime("%Y%m%d")
@@ -192,15 +164,17 @@ class Data:
                 currency = random.choice(["CNY", "USD", "EUR", "SGD"])
                 source_system = "ATM"
                 from_country = tenant
-                to_country = random.choice(["CN", "IR", "US", "SG", "DE"])
+                to_country = random.choice(["CN", "US", "SG", "DE"])
 
                 # Adjust amount slightly depending on scenario
-                if scenario == "positive":
-                    amount = random.uniform(base_amount * 1.05, base_amount * 1.5)
-                elif scenario == "borderline":
-                    amount = random.uniform(base_amount * 0.9, base_amount * 1.1)
-                else:  # negative
-                    amount = random.uniform(base_amount * 0.3, base_amount * 0.8)
+                # if scenario == "positive":
+                #     amount = random.uniform(base_amount * 1.05, base_amount * 1.5)
+                # elif scenario == "borderline":
+                #     amount = random.uniform(base_amount * 0.9, base_amount * 1.1)
+                # else:  # negative
+                #     amount = random.uniform(base_amount * 0.3, base_amount * 0.8)
+                
+                amount = random.uniform(base_amount * 0.9, base_amount * 1.1)
 
                 transactions.append({
                     "Tenant": tenant,
@@ -212,15 +186,8 @@ class Data:
                     "SourceSystem": source_system,
                     "FromTo": f"{from_country}-{to_country}",
                     "From": from_country,
+                    "To": to_country,
                     "Scenario": scenario
-
-                    ### TO DELETE ###
-                    # "To": to_country,
-                    # "RuleType": rule_type,
-                    # "Direction": direction,
-                    # "Threshold": threshold,
-                    # "Frequency": num_txns,
-                    # "AppliedRule": rule
                 })
 
             return transactions  # multiple rows
@@ -244,25 +211,25 @@ class Data:
             if direction == "greater than":
                 if scenario == "positive":
                     amount = random.uniform(threshold * 1.1, threshold * 1.5)
-                elif scenario == "borderline":
+                elif scenario == "boundary":
                     amount = random.uniform(threshold * 0.9, threshold * 1.1)
                 else:
                     amount = random.uniform(threshold * 0.1, threshold * 0.9)
             elif direction == "less than":
                 if scenario == "positive":
                     amount = random.uniform(0, threshold - 1)
-                elif scenario == "borderline":
+                elif scenario == "boundary":
                     amount = random.uniform(threshold - 1000, threshold)
                 else:
                     amount = random.uniform(threshold + 1000, threshold * 2)
 
         elif rule_type == "country":
             if scenario == "positive":
-                to_country = prohibited_country  # prohibited
-            elif scenario == "borderline":
-                to_country = random.choice(["TR", "PK"])  # adjacent
+                to_country = random.choice(risk_dict['high'])
+            elif scenario == "boundary":
+                to_country = random.choice(risk_dict['medium'])
             else:
-                to_country = random.choice(["US", "SG", "DE"])
+                to_country = random.choice(risk_dict['low'])
             amount = random.uniform(5000, 50000)
         else:
             amount = random.uniform(1000, 100000)
@@ -271,7 +238,7 @@ class Data:
 
         return {
             "Tenant": tenant,
-            "TransactionDate": txn_date,
+            "TransactionDate": txn_date.strftime("%Y%m%d"),
             "TransactionID": transaction_id,
             "RuleID": rule_id,
             "Amount": round(amount, 2),
@@ -279,31 +246,26 @@ class Data:
             "SourceSystem": source_system,
             "FromTo": f"{from_country}-{to_country}",
             "From": from_country,
+            "To": to_country,
             "Scenario": scenario
-
-            ### TO DELETE ###
-            # "To": to_country,
-            # "RuleType": rule_type,
-            # "Direction": direction,
-            # "Threshold": threshold,
-            # "AppliedRule": rule
         }
 
-    def generate_dataset(inputs: list[TransactionInput], write_path: str = None) -> pd.DataFrame:
+    def generate_dataset(inputs: list[TransactionInput], risk_dict: dict, write_path: str = None) -> pd.DataFrame:
         """Generate a dataset of fake transactions for all rule inputs."""
         n_per_rule = random.randint(3, 5)
         all_txns = []
         for inp in inputs:
             if inp.rule_type.value == 'frequency':
-                all_txns.extend(Data.generate_transaction(inp))
+                all_txns.extend(Data.generate_transaction(inp, risk_dict))
             else:
                 for _ in range(n_per_rule):
-                    all_txns.append(Data.generate_transaction(inp))
+                    all_txns.append(Data.generate_transaction(inp, risk_dict))
         res = pd.DataFrame(all_txns)
         if write_path:
             Data.write_dataset(res, write_path)
         return res
     
+    ## Not in use ##
     def write_dataset(df: pd.DataFrame, filename: str):
         """Write the dataset to a text file in the specified format."""
         with open(filename, 'w') as output:
@@ -313,5 +275,42 @@ class Data:
 if __name__ == "__main__":
     # For quick testing
     sample_inputs = TransactionInput.sample_data()
-    df = Data.generate_dataset(sample_inputs, write_path="sample_output.txt")
+    df = Data.generate_dataset(sample_inputs)
     print(df.head(20))
+
+
+
+"""
+Tables avail:
+
+t1
+tenant_id
+tenant_name
+
+t2
+rule_id
+rule_name
+rule_description
+rule_query
+
+t3
+tenant_id
+rule_id
+
+t4
+id
+tenant_id
+customer_id
+txn_date
+amount
+country
+source_system
+
+t5
+alert_id
+tenant_id
+rule_id
+customer_id
+txn_date
+description
+"""

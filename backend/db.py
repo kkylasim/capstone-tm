@@ -88,7 +88,7 @@ with app.app_context():
             ('AU', "Australia"),
             ('BN', "Brunei"),
             ('CA', "Canada"),
-            ('CN', "Mainland China"),
+            ('CN', "China"),
             ('FR', "France"),
             ('HK', "Hong Kong"),
             ('IN', "India"),

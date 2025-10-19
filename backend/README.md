@@ -13,6 +13,7 @@ Follow these steps to set up and run the application locally.
 ```bash
 git clone https://github.com/kkylasim/capstone-tm.git
 cd capstone-tm
+cd backend
 ```
 
 ### 2. Create and Activate a Virtual Environment

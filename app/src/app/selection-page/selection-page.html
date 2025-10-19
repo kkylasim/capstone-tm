@@ -8,7 +8,7 @@
     <!-- Dropdown for tenant -->
     <mat-form-field appearance="outline" class="form-control">
         <mat-label>Tenant</mat-label>
-        <mat-select [(value)]="selectedTenant">
+        <mat-select [(value)]="selectedTenant" (selectionChange)="onTenantChange()">
             <mat-option *ngFor="let tenant of tenants" [value]="tenant">
                 {{ tenant }}
             </mat-option>

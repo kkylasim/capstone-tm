@@ -152,6 +152,7 @@ class Data:
             # Frequency means multiple transactions
             num_txns = frequency
             base_amount = 10000
+            #print(f"Threshold: {threshold}")
             amount = random.uniform(base_amount * 0.95, base_amount * 1.05)
             if scenario == "positive":
                 num_txns = random.randint(frequency + 2, frequency + 5)
@@ -165,7 +166,7 @@ class Data:
                 num_txns = random.randint(1, frequency - 2)
                 if rule_type == "composite":
                     amount = random.uniform(threshold * 0.1, threshold * 0.9)
-            
+            #print(amount)
             transactions = []
             for i in range(num_txns):
                 txn_date = (base_date + timedelta(days=i)).strftime("%Y%m%d")
@@ -174,7 +175,6 @@ class Data:
                 source_system = "ATM"
                 from_country = country_codes[tenant]
                 to_country = random.choice(["CN", "US", "SG", "DE"])
-                amount = random.uniform(base_amount * 0.9, base_amount * 1.1)
 
                 transactions.append({
                     "Tenant": tenant,
@@ -189,7 +189,7 @@ class Data:
                     "To": to_country,
                     "Scenario": scenario
                 })
-
+            #print(transactions)
             return transactions  # multiple rows
 
 
@@ -255,7 +255,7 @@ class Data:
         n_per_rule = random.randint(3, 5)
         all_txns = []
         for inp in inputs:
-            if inp.rule_type.value == 'frequency':
+            if inp.rule_type.value == 'frequency' or inp.rule_type.value == 'composite':
                 all_txns.extend(Data.generate_transaction(inp, risk_dict, country_codes))
             else:
                 for _ in range(n_per_rule):

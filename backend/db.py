@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from enum import Enum
 import json
+import random
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rules_db.db'
@@ -19,6 +20,7 @@ class RuleType(str, Enum):
     transaction_amount = "transaction amount"
     country = "country"
     frequency = "frequency"
+    composite = "composite"
 
 
 class Direction(str, Enum):
@@ -53,14 +55,14 @@ class Country(db.Model):
     risk_tier = db.Column(db.String, nullable=False)  # e.g., high, medium, low
 
 
-class RuleCountry(db.Model):
-    __tablename__ = 'rule_countries'
-    id = db.Column(db.Integer, primary_key=True)
-    rule_id = db.Column(db.Integer, db.ForeignKey('rules.rule_id'))
-    country_id = db.Column(db.Integer, db.ForeignKey('countries.country_id'))
+# class RuleCountry(db.Model):
+#     __tablename__ = 'rule_countries'
+#     id = db.Column(db.Integer, primary_key=True)
+#     rule_id = db.Column(db.Integer, db.ForeignKey('rules.rule_id'))
+#     country_id = db.Column(db.Integer, db.ForeignKey('countries.country_id'))
 
-    rule = db.relationship('Rule', backref=db.backref('rule_countries', cascade="all, delete-orphan"))
-    country = db.relationship('Country', backref=db.backref('rule_countries', cascade="all, delete-orphan"))
+#     rule = db.relationship('Rule', backref=db.backref('rule_countries', cascade="all, delete-orphan"))
+#     country = db.relationship('Country', backref=db.backref('rule_countries', cascade="all, delete-orphan"))
 
 
 class TenantRule(db.Model):
@@ -68,10 +70,9 @@ class TenantRule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'))
     rule_id = db.Column(db.Integer, db.ForeignKey('rules.rule_id'))
-    parameters = db.Column(db.Text)
-
-    tenant = db.relationship('Tenant', backref=db.backref('tenant_rules', cascade="all, delete-orphan"))
-    rule = db.relationship('Rule', backref=db.backref('tenant_rules', cascade="all, delete-orphan"))
+    #parameters = db.Column(db.Text)
+    #tenant = db.relationship('Tenant', backref=db.backref('tenant_rules', cascade="all, delete-orphan"))
+    #rule = db.relationship('Rule', backref=db.backref('tenant_rules', cascade="all, delete-orphan"))
 
 with app.app_context():
     db.drop_all()
@@ -140,6 +141,15 @@ with app.app_context():
                 "direction": "less than",
                 "threshold": 5.0,
                 "parameters": {"alert_level": "low"}
+            },
+            {
+                "rule_name": "Frequent Transaction Above Threshold",
+                "rule_description": "Flags frequent transactions above a certain amount",
+                "rule_type": "composite",
+                "direction": "greater than",
+                "frequency": 5,
+                "threshold": 5000.0,
+                "parameters": {"window": "1 day", "currency": "USD"}
             }
         ]
 
@@ -221,30 +231,33 @@ with app.app_context():
         db.session.add_all(countries)
         db.session.commit()
 
-        rule_country_links = [
-            {"rule": rules[1], "country": countries[0]},  # NK
-            {"rule": rules[1], "country": countries[1]},  # Iran
-            {"rule": rules[1], "country": countries[2]},  # Syria
-        ]
+        # rule_country_links = [
+        #     {"rule": rules[1], "country": countries[0]},  # NK
+        #     {"rule": rules[1], "country": countries[1]},  # Iran
+        #     {"rule": rules[1], "country": countries[2]},  # Syria
+        # ]
 
-        for link in rule_country_links:
-            db.session.add(RuleCountry(rule=link["rule"], country=link["country"]))
-        db.session.commit()
+        # for link in rule_country_links:
+        #     db.session.add(RuleCountry(rule=link["rule"], country=link["country"]))
+        # db.session.commit()
 
+         # TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
+        # TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
+        # TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
 
-        tenant_rules = [
-            TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"active": True})),
-            TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "high"})),
-            TenantRule(tenant_id=tenants[0].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 5})),
+        # TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
+        # TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
+        # TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
 
-            TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[1].rule_id, parameters=json.dumps({"risk": "medium"})),
-            TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"limit": 10})),
-            TenantRule(tenant_id=tenants[1].tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"enabled": True})),
-
-            TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
-            TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
-            TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
-        ]
+        # TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[0].rule_id, parameters=json.dumps({"currency": "SGD"})),
+        # TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[2].rule_id, parameters=json.dumps({"window": "12h"})),
+        # TenantRule(tenant_id=tenants[2].tenant_id, rule_id=rules[3].rule_id, parameters=json.dumps({"alert_level": "moderate"})),
+        tenant_rules = []
+        for tenant_code, tenant_name in uob_tenants:
+            selected_rules = random.sample(range(1, len(rules)+1), random.randint(2, len(rules)))
+            for r in selected_rules:
+                curr = TenantRule(tenant_id=tenant_code, rule_id=r)
+                tenant_rules.append(curr)
 
         db.session.add_all(tenant_rules)
         db.session.commit()

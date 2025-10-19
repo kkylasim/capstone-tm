@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-from db import db, Tenant, Rule, Country, RuleCountry, TenantRule  
+from db import db, Tenant, Rule, Country, TenantRule  
 from fake import Data, TransactionInput, Scenario, RuleType, Direction
 
 # Load environment variables from .env file

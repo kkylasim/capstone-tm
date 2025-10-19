@@ -1,9 +1,21 @@
 .container {
-    max-width: 600px;
-    margin: 40px auto;
+    max-width: 1000px;
+    margin: 20px auto;
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.tenant-date-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.rule-item {
+    display: flex;
+    gap: 5px;
+    align-items: center;
 }
 
 .form-control {
@@ -13,7 +25,7 @@
 .box-container {
     display: flex;
     justify-content: space-between;
-    gap: 20px;
+    gap: 30px;
 }
 
 .list-box {

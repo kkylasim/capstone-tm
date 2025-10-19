@@ -1,28 +1,33 @@
 <div class="container">
-    <h2>Data Generation</h2>
 
-    <div class="warning" *ngIf="warningMessage" style="color: red;">
-        {{ warningMessage }}
+    <div>
+        <h1 style="text-align: center;">Data Generation for Transaction Monitoring</h1>
+        <div class="warning" *ngIf="warningMessage" style="color: red; text-align: center;">
+            {{ warningMessage }}
+        </div>
     </div>
+    
 
-    <!-- Dropdown for tenant -->
-    <mat-form-field appearance="outline" class="form-control">
-        <mat-label>Tenant</mat-label>
-        <mat-select [(value)]="selectedTenant" (selectionChange)="onTenantChange()">
-            <mat-option *ngFor="let tenant of tenants" [value]="tenant">
-                {{ tenant }}
-            </mat-option>
-        </mat-select>
-    </mat-form-field>
+    <div class="tenant-date-container">
+        <!-- Dropdown for tenant -->
+        <mat-form-field appearance="outline" class="form-control">
+            <mat-label>Tenant</mat-label>
+            <mat-select [(value)]="selectedTenant" (selectionChange)="onTenantChange()">
+                <mat-option *ngFor="let tenant of tenants" [value]="tenant">
+                    {{ tenant }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
 
-    <!-- Date Picker -->
-    <mat-form-field appearance="outline" class="form-control">
-        <mat-label>Transaction Date</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate">
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
-
+        <!-- Date Picker -->
+        <mat-form-field appearance="outline" class="form-control">
+            <mat-label>Transaction Date</mat-label>
+            <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+    </div>
+    
     <!-- Dropdown for scenario -->
     <mat-form-field appearance="outline" class="form-control">
         <mat-label>Scenario</mat-label>
@@ -39,9 +44,14 @@
             <h3>Available Rules</h3>
             <mat-selection-list #availableList>
                 <mat-list-option *ngFor="let rule of availableRules" [value]="rule">
-                    <div>
+                    <div class="rule-item">
                         <p>{{ rule.name }}</p>
-                        <!-- <p class="description">{{ rule.description }}</p> -->
+                        <mat-icon
+                        matTooltip="{{ rule.description }}"
+                        matTooltipPosition="right"
+                        style="margin-left: 8px; font-size: 21px; cursor: pointer;"
+                        aria-label="Rule description"
+                        >info</mat-icon>
                     </div>
                 </mat-list-option>
             </mat-selection-list>
@@ -55,9 +65,14 @@
             <h3>Applied Rules</h3>
             <mat-selection-list #selectedList>
                 <mat-list-option *ngFor="let rule of selectedRules" [value]="rule">
-                    <div>
+                    <div class="rule-item">
                         <p>{{ rule.name }}</p>
-                        <!-- <p class="description">{{ rule.description }}</p> -->
+                        <mat-icon
+                        matTooltip="{{ rule.description }}"
+                        matTooltipPosition="right"
+                        style="margin-left: 8px; font-size: 21px; cursor: pointer;"
+                        aria-label="Rule description"
+                        >info</mat-icon>
                     </div>
                 </mat-list-option>
             </mat-selection-list>

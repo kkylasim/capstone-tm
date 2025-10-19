@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-selection-page',
@@ -26,7 +27,8 @@ import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
     MatDatepickerModule,
     MatNativeDateModule,
     MatListModule,
-    MatButtonModule
+    MatButtonModule,
+    MatTooltipModule
   ],
   templateUrl: './selection-page.html',
   styleUrls: ['./selection-page.scss']

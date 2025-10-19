@@ -19,11 +19,24 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-@app.route('/config', methods=['GET'])
-def get_config():
+@app.route('/tenants', methods=['GET'])
+def get_tenants():
     tenants = [t.tenant_name for t in Tenant.query.all()]
-    rules = [{"id": r.rule_id, "name": r.rule_name, "description": r.rule_description} for r in Rule.query.all()]
-    return jsonify({"tenants": tenants, "rules": rules})
+    return jsonify({"tenants": tenants})
+
+@app.route('/tenant-rules', methods=['POST'])
+def get_tenant_rules():
+    data = request.get_json()
+    tenant_name = data.get('tenant', 'CN')
+
+    tenant = Tenant.query.filter_by(tenant_name=tenant_name).first()
+    tenant_rules = TenantRule.query.filter_by(tenant_id=tenant.tenant_id).all()
+    rule_ids = [tr.rule_id for tr in tenant_rules]
+
+    rules = Rule.query.filter(Rule.rule_id.in_(rule_ids)).all()
+    rules_data = [{"id": r.rule_id, "name": r.rule_name, "description": r.rule_description} for r in rules]
+
+    return jsonify({"rules": rules_data})
 
 @app.route('/generate-data', methods=['POST'])
 def generate_data():

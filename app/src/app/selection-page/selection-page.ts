@@ -44,24 +44,38 @@ export class SelectionPage {
   warningMessage: string = '';
 
   ngOnInit() {
-    this.fetchConfigData()
+    this.fetchTenants()
   }
 
-  fetchConfigData() {
-    const apiURL = 'http://localhost:5000/config';
+  fetchTenants() {
+    const apiURL = 'http://localhost:5000/tenants';
 
     this.http.get<any>(apiURL).subscribe({
-      next: (data) => {
-        console.log('Config data received:', data);
-        this.tenants = data.tenants || [];
-        this.availableRules = data.rules || [];
+      next: (res) => {
+        this.tenants = res.tenants;
       },
       error: (err) => {
-        console.error('Failed to load config data:', err);
-        this.warningMessage = '⚠️ Failed to load configuration data. Please refresh or try again later.';
+        console.error('Failed to load tenants:', err)
+        this.warningMessage = 'Failed to load tenants from server.';
       }
-    });
+    })
   }
+
+  onTenantChange() {
+    const apiURL = 'http://localhost:5000/tenant-rules';
+    const payload = { tenant: this.selectedTenant }
+    this.http.post<any>(apiURL, payload).subscribe({
+      next: (res) => {
+        this.availableRules = res.rules
+        this.selectedRules = [];
+      },
+      error: (err) => {
+        console.error('Error loading rules:', err);
+        this.warningMessage = 'Failed to load rules for selected tenant.';
+      }
+    })
+  }
+
   moveSelected(selectedItems: any[]) {
     const items = selectedItems.map((x: any) => x.value);
     this.selectedRules.push(...items);

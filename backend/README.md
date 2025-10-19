@@ -11,8 +11,8 @@ Follow these steps to set up and run the application locally.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/flask-rules-engine.git
-cd flask-rules-engine
+git clone https://github.com/kkylasim/capstone-tm.git
+cd capstone-tm
 ```
 
 ### 2. Create and Activate a Virtual Environment

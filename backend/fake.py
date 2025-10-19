@@ -26,6 +26,7 @@ class RuleType(str, Enum):
     transaction_amount = "transaction amount"
     country = "country"
     frequency = "frequency"
+    composite = "composite"
 
 class Direction(str, Enum):
     greater_than = "greater than"
@@ -142,19 +143,29 @@ class Data:
         frequency = input_data.frequency
         threshold = input_data.threshold
 
+        # if rule_type == "composite":
+        #     rule_type = random.choice(["frequency", "transaction amount"])
         # -------------------------- #
         # Frequency RuleType Special #
         # -------------------------- #
-        if rule_type == "frequency":
+        if rule_type == "frequency" or rule_type == "composite":
             # Frequency means multiple transactions
             num_txns = frequency
+            base_amount = 10000
+            amount = random.uniform(base_amount * 0.95, base_amount * 1.05)
             if scenario == "positive":
                 num_txns = random.randint(frequency + 2, frequency + 5)
+                if rule_type == "composite":
+                    amount = random.uniform(threshold * 1.1, threshold * 1.5)
             elif scenario == "boundary":
                 num_txns = random.randint(frequency - 1, frequency + 1)
+                if rule_type == "composite":
+                    amount = random.uniform(threshold * 0.95, threshold * 1.05)
             else:  
                 num_txns = random.randint(1, frequency - 2)
-            base_amount = 10000
+                if rule_type == "composite":
+                    amount = random.uniform(threshold * 0.1, threshold * 0.9)
+            
             transactions = []
             for i in range(num_txns):
                 txn_date = (base_date + timedelta(days=i)).strftime("%Y%m%d")

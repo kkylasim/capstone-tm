@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-from db import db, Tenant, Rule, Country, TenantRule  
+from db import db, Tenant, Rule, Country, TenantRule, seed_db
 from fake import Data, TransactionInput, Scenario, RuleType, Direction
 
 # Load environment variables from .env file
@@ -14,10 +14,7 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rules_db.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-
-## Initialising tables ##
-with app.app_context():
-    db.create_all()
+seed_db(app)
 
 @app.route('/tenants', methods=['GET'])
 def get_tenants():

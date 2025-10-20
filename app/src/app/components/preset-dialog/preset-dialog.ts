@@ -5,20 +5,32 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-preset-dialog',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatDialogModule, MatListModule, MatIconModule, MatTooltipModule],
+  imports: [CommonModule, MatButtonModule, MatDialogModule, MatListModule, MatIconModule, MatTooltipModule, FormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './preset-dialog.html',
   styleUrl: './preset-dialog.scss'
 })
 export class PresetDialog {
+  searchText: string = '';
+
   constructor(
     public dialogRef: MatDialogRef<PresetDialog>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     console.log('Dialog presets:', data.presets);
+  }
+
+  get filteredPresets() {
+    if (!this.searchText) return this.data.presets;
+    return this.data.presets.filter((p: any) =>
+      p.name.toLowerCase().includes(this.searchText.toLowerCase())
+    );
   }
 
   selectPreset(index: number) {

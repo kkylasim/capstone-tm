@@ -40,8 +40,6 @@ import { PresetDialog } from '../components/preset-dialog/preset-dialog';
 })
 export class SelectionPage {
   constructor(private router: Router, private http: HttpClient, private dialog: MatDialog) {
-    // const saved = localStorage.getItem('presets');
-    // if (saved) this.presets = JSON.parse(saved);
   }
 
   tenants: string[] = [];
@@ -58,6 +56,10 @@ export class SelectionPage {
 
   ngOnInit() {
     this.fetchTenants()
+    const saved = localStorage.getItem('presets');
+    if (saved) {
+      this.presets = JSON.parse(saved);
+    }
   }
 
   fetchTenants() {

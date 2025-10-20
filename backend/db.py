@@ -184,6 +184,7 @@ def seed_db(app):
                 {"country_code": "VN", "country_name": "Vietnam", "risk_tier": "medium"},
                 {"country_code": "BR", "country_name": "Brazil", "risk_tier": "medium"},
                 {"country_code": "RU", "country_name": "Russia", "risk_tier": "medium"},
+                {"country_code": "BN", "country_name": "Brunei", "risk_tier": "medium"},
 
                 # Low-risk countries
                 {"country_code": "SG", "country_name": "Singapore", "risk_tier": "low"},

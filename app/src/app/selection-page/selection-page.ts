@@ -10,7 +10,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
-import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -126,15 +126,17 @@ export class SelectionPage {
       next: (response) => {
         console.log('Response from backend', response);
         const total = Array.isArray(response?.results) ? response.results.length : 0;
-        const transactionDate = this.selectedDate!.toISOString().slice(0,10).replace(/-/g,'');
-        this.router.navigate(['/end'], {  state: {
-        data: response.results,
-        tenant: this.selectedTenant,                 // e.g. "SG"
-        date: transactionDate,                       // "YYYYMMDD"
-        scenario: this.selectedScenario,             // "Positive"/"Negative"/"Boundary"
-        rules: this.selectedRules.map(r => r.name),  // ["High Transaction Amount", ...]
-        rows: total
-      } });
+        const transactionDate = this.selectedDate!.toISOString().slice(0, 10).replace(/-/g, '');
+        this.router.navigate(['/end'], {
+          state: {
+            data: response.results,
+            tenant: this.selectedTenant,                 // e.g. "SG"
+            date: transactionDate,                       // "YYYYMMDD"
+            scenario: this.selectedScenario,             // "Positive"/"Negative"/"Boundary"
+            rules: this.selectedRules.map(r => r.name),  // ["High Transaction Amount", ...]
+            rows: total
+          }
+        });
       },
       error: (error) => {
         console.error('Error from backend', error);
@@ -151,13 +153,13 @@ export class SelectionPage {
       maxHeight: '60vh',
       autoFocus: false
     });
-  
+
     dialogRef.afterClosed().subscribe((preset: any) => {
       if (preset) {
         // Autofill fields from selected preset
         this.selectedTenant = preset.tenant;
         this.selectedScenario = preset.scenario;
-  
+
         // Fetch the rules for the tenant from the backend
         const apiURL = 'http://localhost:5000/tenant-rules';
         const payload = { tenant: preset.tenant };
@@ -165,12 +167,12 @@ export class SelectionPage {
           next: (res) => {
             // Set availableRules to all rules for the tenant
             this.availableRules = res.rules;
-  
+
             // Find rule objects for the preset
             const presetRuleObjects = preset.rules
               .map((name: string) => this.availableRules.find(r => r.name === name))
               .filter(Boolean);
-  
+
             // Remove these rules from availableRules
             this.availableRules = this.availableRules.filter(
               r => !preset.rules.includes(r.name)

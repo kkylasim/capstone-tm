@@ -1,0 +1,37 @@
+mat-dialog-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    display: block;
+  }
+  
+  .preset-item {
+    display: flex;
+    align-items: flex-start;
+    border-bottom: 1px solid #eee;
+    padding: 16px 0;
+    gap: 24px;
+  }
+  .preset-item:last-child {
+    border-bottom: none;
+  }
+  .preset-details {
+    flex: 1;
+  }
+  .preset-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 4px;
+  }
+  .preset-rules {
+    color: #1976d2;
+  }
+  .preset-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }

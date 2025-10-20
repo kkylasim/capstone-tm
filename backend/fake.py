@@ -143,8 +143,6 @@ class Data:
         frequency = input_data.frequency
         threshold = input_data.threshold
 
-        # if rule_type == "composite":
-        #     rule_type = random.choice(["frequency", "transaction amount"])
         # -------------------------- #
         # Frequency RuleType Special #
         # -------------------------- #
@@ -152,21 +150,14 @@ class Data:
             # Frequency means multiple transactions
             num_txns = frequency
             base_amount = 10000
-            #print(f"Threshold: {threshold}")
-            amount = random.uniform(base_amount * 0.95, base_amount * 1.05)
+
             if scenario == "positive":
                 num_txns = random.randint(frequency + 2, frequency + 5)
-                if rule_type == "composite":
-                    amount = random.uniform(threshold * 1.1, threshold * 1.5)
             elif scenario == "boundary":
                 num_txns = random.randint(frequency - 1, frequency + 1)
-                if rule_type == "composite":
-                    amount = random.uniform(threshold * 0.95, threshold * 1.05)
             else:  
                 num_txns = random.randint(1, frequency - 2)
-                if rule_type == "composite":
-                    amount = random.uniform(threshold * 0.1, threshold * 0.9)
-            #print(amount)
+
             transactions = []
             for i in range(num_txns):
                 txn_date = (base_date + timedelta(days=i)).strftime("%Y%m%d")
@@ -175,6 +166,15 @@ class Data:
                 source_system = "ATM"
                 from_country = country_codes[tenant]
                 to_country = random.choice(["CN", "US", "SG", "DE"])
+
+                amount = random.uniform(base_amount * 0.95, base_amount * 1.05)
+                if rule_type == "composite":
+                    if scenario == "positive":
+                        amount = random.uniform(threshold * 1.1, threshold * 1.5)
+                    elif scenario == "boundary":
+                        amount = random.uniform(threshold * 0.95, threshold * 1.05)
+                    else:
+                        amount = random.uniform(threshold * 0.1, threshold * 0.9)
 
                 transactions.append({
                     "Tenant": tenant,
@@ -189,7 +189,6 @@ class Data:
                     "To": to_country,
                     "Scenario": scenario
                 })
-            #print(transactions)
             return transactions  # multiple rows
 
 
@@ -217,11 +216,11 @@ class Data:
                     amount = random.uniform(threshold * 0.1, threshold * 0.9)
             elif direction == "less than":
                 if scenario == "positive":
-                    amount = random.uniform(0, threshold - 1)
+                    amount = random.uniform(threshold * 0.1, threshold * 0.9)
                 elif scenario == "boundary":
-                    amount = random.uniform(threshold - 1000, threshold)
+                    amount = random.uniform(threshold * 0.9, threshold * 1.1)
                 else:
-                    amount = random.uniform(threshold + 1000, threshold * 2)
+                    amount = random.uniform(threshold * 1.1, threshold * 1.5)
 
         elif rule_type == "country":
             if scenario == "positive":

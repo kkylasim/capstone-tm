@@ -3,7 +3,7 @@
     margin: 20px auto;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
 }
 
 .tenant-date-container {
@@ -11,6 +11,14 @@
     justify-content: space-between;
     gap: 30px;
 }
+
+.presets-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 5px;
+    text-align: center;
+  }
 
 .rule-item {
     display: flex;
@@ -36,6 +44,11 @@
     display: block;
     margin-left: auto;
 }
+
+.preset-btn {
+    background-color: #4d8ac8 !important;
+    color: #fff !important;
+  }
 
 mat-selection-list {
     border: 1px solid #ccc;

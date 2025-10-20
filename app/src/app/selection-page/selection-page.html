@@ -6,7 +6,13 @@
             {{ warningMessage }}
         </div>
     </div>
-    
+
+    <div class="presets-container">
+        You may choose to
+        <button mat-raised-button class="preset-btn" (click)="openPresetDialog()" style="margin-right: 10px; margin-left:10px">
+            Use a preset
+        </button>  or select fields manually. Alternatively, click 'Add preset' to save your current selection as a preset.
+    </div>
 
     <div class="tenant-date-container">
         <!-- Dropdown for tenant -->
@@ -82,6 +88,11 @@
             </button>
         </div>
     </div>
+
+    <button mat-raised-button class="preset-btn" style="margin-top: 10px;"
+    (click)="addPreset()">
+    + Add preset
+    </button>
 
     <button mat-raised-button color="primary" (click)="generateData()">
         Generate transactions

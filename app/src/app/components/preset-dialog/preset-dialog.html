@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>Preset Rules</h2>
+<mat-form-field appearance="outline" style="width: 90%; margin-left:20px; margin-right:10px">
+  <mat-label>Search by name</mat-label>
+  <input matInput [(ngModel)]="searchText" placeholder="Type to search...">
+</mat-form-field>
+<div mat-dialog-content>
+  <div *ngIf="filteredPresets.length; else noPresets">
+    <div *ngFor="let preset of filteredPresets; let i = index" class="preset-item">
+      <div class="preset-details">
+        <div class="preset-name">{{ preset.name }}</div>
+        <div>Tenant: <b>{{ preset.tenant }}</b></div>
+        <div>Scenario: <b>{{ preset.scenario }}</b></div>
+        <div>Rules: <span class="preset-rules">{{ preset.rules.join(', ') }}</span></div>
+      </div>
+      <div class="preset-actions">
+        <button mat-icon-button color="primary" matTooltip="Use" (click)="selectPreset(i)">
+          <mat-icon>check_circle</mat-icon>
+        </button>
+        <button mat-icon-button color="accent" matTooltip="Edit" (click)="editPreset(i)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" matTooltip="Delete" (click)="deletePreset(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+  <ng-template #noPresets>
+    <div style="margin: 24px 0; text-align: center;">No presets found.</div>
+  </ng-template>
+</div>
+<div mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+</div>

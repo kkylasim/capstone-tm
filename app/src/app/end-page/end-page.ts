@@ -18,9 +18,24 @@ export class EndPage {
   displayedColumns: string[] = [];
   dataSource: any[] = [];
   warningMessage: string = ''
+  
+  summary = '';
 
   constructor() {
     const isBrowser = typeof window !== 'undefined' && typeof history !== 'undefined';
+
+    const st = (typeof window !== 'undefined' ? history.state : {}) as any;
+
+    // Summary
+    const tenant = st?.tenant ?? '';
+    const date = st?.date ?? '';
+    const scenario = st?.scenario ?? '';
+    const rules = (st?.rules ?? []) as string[];
+    const rows = st?.rows ?? (Array.isArray(st?.data) ? st.data.length : 0);
+
+    this.summary = `Tenant=${tenant} | Date=${date} | Scenario=${scenario} | Total Rules=${rules.length} | Rows=${rows}\n` +
+    `Rules Selected: ${rules.join(', ')}`;
+
 
     let data: any[] | null = null;
 

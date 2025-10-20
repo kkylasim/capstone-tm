@@ -35,3 +35,19 @@ table {
   width: 80%;
   margin-top: 20px;
 }
+
+.summary-box {
+  background: #f9fafb;
+  padding: 16px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+
+.summary-box pre {
+  margin: 0;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: #333;
+}

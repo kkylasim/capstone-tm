@@ -125,7 +125,16 @@ export class SelectionPage {
     this.http.post<any>(apiURL, payload).subscribe({
       next: (response) => {
         console.log('Response from backend', response);
-        this.router.navigate(['/end'], { state: { data: response.results } });
+        const total = Array.isArray(response?.results) ? response.results.length : 0;
+        const transactionDate = this.selectedDate!.toISOString().slice(0,10).replace(/-/g,'');
+        this.router.navigate(['/end'], {  state: {
+        data: response.results,
+        tenant: this.selectedTenant,                 // e.g. "SG"
+        date: transactionDate,                       // "YYYYMMDD"
+        scenario: this.selectedScenario,             // "Positive"/"Negative"/"Boundary"
+        rules: this.selectedRules.map(r => r.name),  // ["High Transaction Amount", ...]
+        rows: total
+      } });
       },
       error: (error) => {
         console.error('Error from backend', error);

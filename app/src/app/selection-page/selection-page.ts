@@ -56,9 +56,11 @@ export class SelectionPage {
 
   ngOnInit() {
     this.fetchTenants()
-    const saved = localStorage.getItem('presets');
-    if (saved) {
-      this.presets = JSON.parse(saved);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = localStorage.getItem('presets');
+      if (saved) {
+        this.presets = JSON.parse(saved);
+      }
     }
   }
 
@@ -209,7 +211,9 @@ export class SelectionPage {
       rules: this.selectedRules.map(r => r.name)
     };
     this.presets.push(newPreset);
-    localStorage.setItem('presets', JSON.stringify(this.presets));
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('presets', JSON.stringify(this.presets));
+    }
 
     this.selectedTenant = null;
     this.selectedDate = null;
